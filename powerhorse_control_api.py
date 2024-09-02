@@ -1,9 +1,57 @@
 from fastapi import FastAPI
 from powerhorse_arm_motor_control import Motor, LinkedMotors, Arrow
 from powerhorse_track_motor_control import MotorControl
+from PCA9685 import PCA9685
+import time
 
-tracks_controller = MotorControl(0x40, debug=False)
-tracks_controller.setPWMFreq(50)
+Dir = [
+    'forward',
+    'backward',
+]
+
+pwm = PCA9685(0x40, debug=False)
+pwm.setPWMFreq(50)
+
+class MotorDriver():
+    def __init__(self):
+        self.PWMA = 0
+        self.AIN1 = 1
+        self.AIN2 = 2
+        self.PWMB = 5
+        self.BIN1 = 3
+        self.BIN2 = 4
+
+    def MotorRun(self, motor, index, speed):
+        if speed > 100:
+            return
+        if(motor == 0):
+            pwm.setDutycycle(self.PWMA, speed)
+            if(index == Dir[0]):
+                print ("1")
+                pwm.setLevel(self.AIN1, 0)
+                pwm.setLevel(self.AIN2, 1)
+            else:
+                print ("2")
+                pwm.setLevel(self.AIN1, 1)
+                pwm.setLevel(self.AIN2, 0)
+        else:
+            pwm.setDutycycle(self.PWMB, speed)
+            if(index == Dir[0]):
+                print ("3")
+                pwm.setLevel(self.BIN1, 0)
+                pwm.setLevel(self.BIN2, 1)
+            else:
+                print ("4")
+                pwm.setLevel(self.BIN1, 1)
+                pwm.setLevel(self.BIN2, 0)
+
+    def MotorStop(self, motor):
+        if (motor == 0):
+            pwm.setDutycycle(self.PWMA, 0)
+        else:
+            pwm.setDutycycle(self.PWMB, 0)
+
+
 
 class PowerHorse:
     def __init__(self):
@@ -20,7 +68,7 @@ class PowerHorse:
 
         self.arm_all = LinkedMotors(self.arm_motor_shoulder, self.arm_motor_elbow, self.arm_motor_wrist, self.arm_motor_gripper)
 
-        self.track_motors = tracks_controller
+        self.track_motors = MotorDriver()
 
         self.arm_arrow_shoulder = Arrow(1)
         self.arm_arrow_elbow = Arrow(2)
@@ -50,7 +98,7 @@ class PowerHorse:
         differential = max(min(differential, 100), -100)
 
         # Determine direction index based on the sign of the throttle
-        direction_index = 0 if throttle >= 0 else 1
+        direction_index = "forward" if throttle >= 0 else "backward"
 
         # Calculate motor speeds based on throttle and differential values
         abs_throttle = abs(throttle)
