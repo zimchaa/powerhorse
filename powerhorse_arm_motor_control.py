@@ -18,10 +18,10 @@ class Motor:
             the motor is connected.
     config = int defining which pins control "forward" and "backward" movement.
     '''
-    motorpins = {"MOTOR4":{"config":{1:{"e":12,"f":8,"r":7},2:{"e":12,"f":7,"r":8}},"arrow":1},
-                 "MOTOR3":{"config":{1:{"e":10,"f":9,"r":11},2:{"e":10,"f":11,"r":9}}, "arrow":2},
-                 "MOTOR2":{"config":{1:{"e":25,"f":23,"r":24},2:{"e":25,"f":24,"r":23}}, "arrow":3},
-                 "MOTOR1":{"config":{1:{"e":17,"f":22,"r":27},2:{"e":17,"f":27,"r":22}},"arrow":4}}
+    motorpins = {"MOTOR4":{"config":{1:{"e":32,"f":24,"r":26},2:{"e":32,"f":26,"r":24}},"arrow":1},
+                 "MOTOR3":{"config":{1:{"e":19,"f":21,"r":23},2:{"e":19,"f":23,"r":21}}, "arrow":2},
+                 "MOTOR2":{"config":{1:{"e":22,"f":16,"r":18},2:{"e":22,"f":18,"r":16}}, "arrow":3},
+                 "MOTOR1":{"config":{1:{"e":11,"f":15,"r":13},2:{"e":11,"f":13,"r":15}},"arrow":4}}
                  
     
     def __init__(self, motor, config):
