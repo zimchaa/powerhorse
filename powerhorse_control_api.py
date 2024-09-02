@@ -148,6 +148,7 @@ class PowerHorse:
         self.camera_angle = angle
 
 app = FastAPI()
+powerhorse = PowerHorse()
 
 @app.get("/")
 async def root():
@@ -155,102 +156,102 @@ async def root():
 
 @app.get("/powerhorse/tracks")
 async def get_tracks():
-    return PowerHorse.tracks
+    return powerhorse.tracks
 
 @app.put("/powerhorse/tracks/{throttle}/{differential}")
 async def set_tracks(throttle: float, differential: float):
-    PowerHorse.set_tracks(throttle, differential)
+    powerhorse.set_tracks(throttle, differential)
     return {"throttle": throttle, "differential": differential}
 
 @app.put("/powerhorse/tracks/throttle/{throttle}")
 async def set_tracks_throttle(throttle: float):
-    PowerHorse.set_tracks(throttle, PowerHorse.tracks["differential"])
-    return {"throttle": throttle, "differential": PowerHorse.tracks["differential"]}
+    powerhorse.set_tracks(throttle, powerhorse.tracks["differential"])
+    return {"throttle": throttle, "differential": powerhorse.tracks["differential"]}
 
 @app.put("/powerhorse/tracks/differential/{differential}")
 async def set_tracks_differential(differential: float):
-    PowerHorse.set_tracks(PowerHorse.tracks["throttle"], differential)
-    return {"throttle": PowerHorse.tracks["throttle"], "differential": differential}
+    powerhorse.set_tracks(powerhorse.tracks["throttle"], differential)
+    return {"throttle": powerhorse.tracks["throttle"], "differential": differential}
 
 @app.put("/powerhorse/tracks/stop")
 async def stop_tracks():
-    PowerHorse.set_tracks(0, 0)
+    powerhorse.set_tracks(0, 0)
     return {"throttle": 0, "differential": 0}
 
 @app.get("/powerhorse/arm")
 async def get_arm():
-    return {"joints": PowerHorse.arm}
+    return {"joints": powerhorse.arm}
 
 @app.get("/powerhorse/arm/{joint}")
 async def get_arm_joint(joint: str):
-    return {"joint": joint, "power": PowerHorse.arm[joint]}
+    return {"joint": joint, "power": powerhorse.arm[joint]}
 
 @app.put("/powerhorse/arm/{joint}/{power}")
 async def set_arm_joint(joint: str, power: float):
-    PowerHorse.set_arm(joint, power)
+    powerhorse.set_arm(joint, power)
     return {"joint": joint, "power": power}
 
 @app.put("/powerhorse/arm/stop")
 async def stop_arm():
-    PowerHorse.set_arm("shoulder", 0)
-    PowerHorse.set_arm("elbow", 0)
-    PowerHorse.set_arm("wrist", 0)
-    PowerHorse.set_arm("gripper", 0)
-    return {"joints": PowerHorse.arm}
+    powerhorse.set_arm("shoulder", 0)
+    powerhorse.set_arm("elbow", 0)
+    powerhorse.set_arm("wrist", 0)
+    powerhorse.set_arm("gripper", 0)
+    return {"joints": powerhorse.arm}
 
 @app.put("/powerhorse/arm/stop/{joint}")
 async def stop_arm_joint(joint: str):
-    PowerHorse.set_arm(joint, 0)
+    powerhorse.set_arm(joint, 0)
     return {"joint": joint, "power": 0}
 
 @app.get("/powerhorse/light")
 async def get_light():
-    return {"light": PowerHorse.light}
+    return {"light": powerhorse.light}
 
 @app.put("/powerhorse/light/on")
 async def turn_light_on():
-    PowerHorse.set_light(True)
-    return {"light": PowerHorse.light}
+    powerhorse.set_light(True)
+    return {"light": powerhorse.light}
 
 @app.put("/powerhorse/light/off")
 async def turn_light_off():
-    PowerHorse.set_light(False)
-    return {"light": PowerHorse.light}
+    powerhorse.set_light(False)
+    return {"light": powerhorse.light}
 
 @app.put("/powerhorse/light/toggle")
 async def toggle_light():
-    if PowerHorse.light:
-        PowerHorse.set_light(False)
+    if powerhorse.light:
+        powerhorse.set_light(False)
     else:
-        PowerHorse.set_light(True)
-    return {"light": PowerHorse.light}
+        powerhorse.set_light(True)
+    return {"light": powerhorse.light}
 
 @app.get("/powerhorse/camera")
 async def get_camera():
-    return {"camera": PowerHorse.camera_angle}
+    return {"camera": powerhorse.camera_angle}
 
 @app.put("/powerhorse/camera/rotate/{angle}")
 async def rotate_camera(angle: int):
-    PowerHorse.set_camera(angle)
-    return {"camera": PowerHorse.camera_angle}
+    powerhorse.set_camera(angle)
+    return {"camera": powerhorse.camera_angle}
 
 @app.put("/powerhorse/camera/stop")
 async def stop_camera():
-    PowerHorse.set_camera(0)
-    return {"camera": PowerHorse.camera_angle}
+    powerhorse.set_camera(0)
+    return {"camera": powerhorse.camera_angle}
 
 @app.put("/powerhorse/camera/home")
 async def home_camera():
-    PowerHorse.set_camera(0)
-    return {"camera": PowerHorse.camera_angle}
+    powerhorse.set_camera(0)
+    return {"camera": powerhorse.camera_angle}
 
 @app.put("/powerhorse/stop")
 async def emergency_stop():
-    PowerHorse.set_tracks(0, 0)
-    PowerHorse.set_arm("shoulder", 0)
-    PowerHorse.set_arm("elbow", 0)
-    PowerHorse.set_arm("wrist", 0)
-    PowerHorse.set_arm("gripper", 0)
-    PowerHorse.set_light(False)
-    PowerHorse.set_camera(0)
+    powerhorse.set_tracks(0, 0)
+    powerhorse.set_arm("shoulder", 0)
+    powerhorse.set_arm("elbow", 0)
+    powerhorse.set_arm("wrist", 0)
+    powerhorse.set_arm("gripper", 0)
+    powerhorse.set_light(False)
+    powerhorse.set_camera(0)
     return {"stop": True}
