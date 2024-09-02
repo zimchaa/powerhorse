@@ -6,7 +6,6 @@
 # updateed to use gpiozero library instead of RPi.GPIO  
 
 from gpiozero import PWMOutputDevice, DigitalOutputDevice, InputDevice
-import time
 from time import sleep
 
 class Motor:
@@ -130,89 +129,6 @@ class LinkedMotors:
      '''
         for i in range(len(self.motor)):
             self.motor[i].stop()
-
-
-
-class Stepper:
-    ''' Defines stepper motor pins on the MotorShield
-    
-        Arguments:
-        motor = stepper motor
-    '''
-    
-    stepperpins = {"STEPPER1":{"en1":11, "en2":22, "c1":13,"c2":15, "c3":18, "c4":16},
-                   "STEPPER2":{"en1":19, "en2":32, "c1":21,"c2":23, "c3":24, "c4":26}}
-                  
-    def __init__(self, motor):
-        self.config = self.stepperpins[motor]
-        self.en1 = DigitalOutputDevice(self.config["en1"])
-        self.en2 = DigitalOutputDevice(self.config["en2"])
-        self.c1 = DigitalOutputDevice(self.config["c1"])
-        self.c2 = DigitalOutputDevice(self.config["c2"])
-        self.c3 = DigitalOutputDevice(self.config["c3"])
-        self.c4 = DigitalOutputDevice(self.config["c4"])
-        
-        self.en1.on()
-        self.en2.on()
-        self.c1.off()
-        self.c2.off()
-        self.c3.off()
-        self.c4.off()
-
-    ''' Set steps of Stepper Motor
-    
-        Arguments:
-        w1,w2,w3,w4 = Wire of Stepper Motor
-    '''
-    def setStep(self, w1, w2, w3, w4):
-        self.c1.value = w1
-        self.c2.value = w2
-        self.c3.value = w3
-        self.c4.value = w4
-
-    ''' Rotate Stepper motor in forward direction
-    
-        Arguments:
-        delay = time between steps in miliseconds
-        steps = Number of Steps
-    '''
-    def forward(self, delay, steps):
-        for i in range(0, steps):
-            self.setStep(1, 0, 1, 0)
-            time.sleep(delay)
-            self.setStep(0, 1, 1, 0)
-            time.sleep(delay)
-            self.setStep(0, 1, 0, 1)
-            time.sleep(delay)
-            self.setStep(1, 0, 0, 1)
-            time.sleep(delay)
-
-    ''' Rotate Stepper motor in backward direction
-    
-        Arguments:
-        delay = time between steps
-        steps = Number of Steps
-    '''
-    def backward(self, delay, steps):
-        for i in range(0, steps):
-            self.setStep(1, 0, 0, 1)
-            time.sleep(delay)
-            self.setStep(0, 1, 0, 1)
-            time.sleep(delay)
-            self.setStep(0, 1, 1, 0)
-            time.sleep(delay)
-            self.setStep(1, 0, 1, 0)
-            time.sleep(delay)
-
-    def stop(self):
-        ''' Stops power to the motor,
-     '''
-        print("Stop Stepper Motor")
-        self.c1.off()
-        self.c2.off()
-        self.c3.off()
-        self.c4.off()
-        
 
 
 class Sensor:

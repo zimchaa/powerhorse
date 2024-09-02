@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from powerhorse_arm_motor_control import Motor, LinkedMotors, Arrow
-import time
-import RPi.GPIO as GPIO
 from powerhorse_track_motor_control import MotorControl
 
 tracks_controller = MotorControl(0x40, debug=False)
