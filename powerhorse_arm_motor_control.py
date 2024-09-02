@@ -3,13 +3,11 @@
 # Library for PiMotor Shield V2
 # Developed by: SB Components
 # Project: RPi Motor Shield - imported from https://github.com/sbcshop/MotorShield PiMotor.py updated for the PowerHorse project
+# updateed to use gpiozero library instead of RPi.GPIO  
 
-import RPi.GPIO as GPIO                        #Import GPIO library
+from gpiozero import PWMOutputDevice, DigitalOutputDevice, InputDevice
 import time
 from time import sleep
-GPIO.setmode(GPIO.BOARD)                       #Set GPIO pin numbering
-
-GPIO.setwarnings(False)
 
 class Motor:
     ''' Class to handle interaction with the motor pins
@@ -31,14 +29,12 @@ class Motor:
         self.testMode = False
         self.arrow = Arrow(self.motorpins[motor]["arrow"])
         self.pins = self.motorpins[motor]["config"][config]
-        GPIO.setup(self.pins['e'],GPIO.OUT)
-        GPIO.setup(self.pins['f'],GPIO.OUT)
-        GPIO.setup(self.pins['r'],GPIO.OUT)
-        self.PWM = GPIO.PWM(self.pins['e'], 50)  # 50Hz frequency
-        self.PWM.start(0)
-        GPIO.output(self.pins['e'],GPIO.HIGH)
-        GPIO.output(self.pins['f'],GPIO.LOW)
-        GPIO.output(self.pins['r'],GPIO.LOW)
+        self.PWM = PWMOutputDevice(self.pins['e'])
+        self.forward_pin = DigitalOutputDevice(self.pins['f'])
+        self.reverse_pin = DigitalOutputDevice(self.pins['r'])
+        self.PWM.value = 0
+        self.forward_pin.off()
+        self.reverse_pin.off()
 
     def test(self, state):
         ''' Puts the motor into test mode
@@ -61,9 +57,9 @@ class Motor:
         if self.testMode:
             self.arrow.on()
         else:
-            self.PWM.ChangeDutyCycle(speed)
-            GPIO.output(self.pins['f'],GPIO.HIGH)
-            GPIO.output(self.pins['r'],GPIO.LOW)
+            self.PWM.value = speed / 100.0
+            self.forward_pin.on()
+            self.reverse_pin.off()
 
     def reverse(self,speed):
         ''' Starts the motor turning in its configured "reverse" direction.
@@ -76,18 +72,18 @@ class Motor:
         if self.testMode:
             self.arrow.off()
         else:
-            self.PWM.ChangeDutyCycle(speed)
-            GPIO.output(self.pins['f'],GPIO.LOW)
-            GPIO.output(self.pins['r'],GPIO.HIGH)
+            self.PWM.value = speed / 100.0
+            self.forward_pin.off()
+            self.reverse_pin.on()
 
     def stop(self):
         ''' Stops power to the motor,
      '''
         print("Stop")
         self.arrow.off()
-        self.PWM.ChangeDutyCycle(0)
-        GPIO.output(self.pins['f'],GPIO.LOW)
-        GPIO.output(self.pins['r'],GPIO.LOW)
+        self.PWM.value = 0
+        self.forward_pin.off()
+        self.reverse_pin.off()
 
     def speed(self):
         ''' Control Speed of Motor,
@@ -149,19 +145,19 @@ class Stepper:
                   
     def __init__(self, motor):
         self.config = self.stepperpins[motor]
-        GPIO.setup(self.config["en1"],GPIO.OUT)
-        GPIO.setup(self.config["en2"],GPIO.OUT)
-        GPIO.setup(self.config["c1"],GPIO.OUT)
-        GPIO.setup(self.config["c2"],GPIO.OUT)
-        GPIO.setup(self.config["c3"],GPIO.OUT)
-        GPIO.setup(self.config["c4"],GPIO.OUT)
+        self.en1 = DigitalOutputDevice(self.config["en1"])
+        self.en2 = DigitalOutputDevice(self.config["en2"])
+        self.c1 = DigitalOutputDevice(self.config["c1"])
+        self.c2 = DigitalOutputDevice(self.config["c2"])
+        self.c3 = DigitalOutputDevice(self.config["c3"])
+        self.c4 = DigitalOutputDevice(self.config["c4"])
         
-        GPIO.output(self.config["en1"],GPIO.HIGH)
-        GPIO.output(self.config["en2"],GPIO.HIGH)
-        GPIO.output(self.config["c1"],GPIO.LOW)
-        GPIO.output(self.config["c2"],GPIO.LOW)
-        GPIO.output(self.config["c3"],GPIO.LOW)
-        GPIO.output(self.config["c4"],GPIO.LOW)
+        self.en1.on()
+        self.en2.on()
+        self.c1.off()
+        self.c2.off()
+        self.c3.off()
+        self.c4.off()
 
     ''' Set steps of Stepper Motor
     
@@ -169,10 +165,10 @@ class Stepper:
         w1,w2,w3,w4 = Wire of Stepper Motor
     '''
     def setStep(self, w1, w2, w3, w4):
-        GPIO.output(self.config["c1"], w1)
-        GPIO.output(self.config["c2"], w2)
-        GPIO.output(self.config["c3"], w3)
-        GPIO.output(self.config["c4"], w4)
+        self.c1.value = w1
+        self.c2.value = w2
+        self.c3.value = w3
+        self.c4.value = w4
 
     ''' Rotate Stepper motor in forward direction
     
@@ -212,10 +208,10 @@ class Stepper:
         ''' Stops power to the motor,
      '''
         print("Stop Stepper Motor")
-        GPIO.output(self.config['c1'],GPIO.LOW)
-        GPIO.output(self.config['c2'],GPIO.LOW)
-        GPIO.output(self.config['c3'],GPIO.LOW)
-        GPIO.output(self.config['c4'],GPIO.LOW)
+        self.c1.off()
+        self.c2.off()
+        self.c3.off()
+        self.c4.off()
         
 
 
@@ -230,8 +226,8 @@ class Sensor:
     '''
     Triggered = False
     def iRCheck(self):
-        input_state = GPIO.input(self.config["echo"])
-        if input_state == True:
+        input_state = self.echo.is_active
+        if input_state:
             print("Sensor 2: Object Detected")
             self.Triggered = True
         else:
@@ -240,13 +236,13 @@ class Sensor:
     def sonicCheck(self):
         print("SonicCheck has been triggered")
         time.sleep(0.333)
-        GPIO.output(self.config["trigger"], True)
+        self.trigger.on()
         time.sleep(0.00001)
-        GPIO.output(self.config["trigger"], False)
+        self.trigger.off()
         start = time.time()
-        while GPIO.input(self.config["echo"])==0:
+        while not self.echo.is_active:
             start = time.time()
-        while GPIO.input(self.config["echo"])==1:
+        while self.echo.is_active:
             stop = time.time()
         elapsed = stop-start
         measure = (elapsed * 34300)/2
@@ -276,8 +272,8 @@ class Sensor:
         self.lastRead = 0
         if "trigger" in self.config:
             print("trigger")
-            GPIO.setup(self.config["trigger"],GPIO.OUT)
-        GPIO.setup(self.config["echo"],GPIO.IN) 
+            self.trigger = DigitalOutputDevice(self.config["trigger"])
+        self.echo = InputDevice(self.config["echo"]) 
 
 class Arrow():
     ''' Defines an object for controlling one of the LED arrows on the Motorshield.
@@ -291,12 +287,11 @@ class Arrow():
     arrowpins={1:33,2:35,3:37,4:36}
 
     def __init__(self, which):
-        self.pin = self.arrowpins[which]
-        GPIO.setup(self.pin,GPIO.OUT)
-        GPIO.output(self.pin, GPIO.LOW)
+        self.pin = DigitalOutputDevice(self.arrowpins[which])
+        self.pin.off()
 
     def on(self):
-        GPIO.output(self.pin,GPIO.HIGH)
+        self.pin.on()
 
     def off(self):
-        GPIO.output(self.pin,GPIO.LOW)
+        self.pin.off()
